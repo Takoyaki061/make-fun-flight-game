@@ -205,6 +205,11 @@ export function createRenderer(canvas) {
     ctx.fillStyle = haze;
     ctx.fillRect(0, H * 0.42, W, H * 0.2);
 
+    // Undercoat: the canyon floor's colour from the horizon down, so no
+    // angle of the camera can ever leave a transparent hole in the world.
+    ctx.fillStyle = palette.floorA;
+    ctx.fillRect(0, H * 0.5, W, H * 0.5);
+
     // Segments far to near. A segment whose near edge sits behind the camera
     // is clipped to just in front of it, so the ground fills the bottom of
     // the screen instead of stopping a segment ahead.

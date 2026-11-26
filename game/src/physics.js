@@ -121,13 +121,17 @@ export function createFlight() {
 
     const pos = track.positionAt(state.z);
 
-    // Canyon walls: clip one and it costs hull, speed and line.
-    if (Math.abs(state.x) > pos.halfWidth - 1 && state.hitCooldown <= 0 && !seg?.runway) {
-      state.damage = Math.min(100, state.damage + DAMAGE.wallClip);
-      state.speed *= 0.94;
+    // Canyon walls: the plane can never leave the canyon — the position is
+    // clamped hard every step, and the hull only takes a hit on a cooldown,
+    // so grinding along a wall still costs you.
+    if (Math.abs(state.x) > pos.halfWidth - 1 && !seg?.runway) {
       state.x = Math.sign(state.x) * (pos.halfWidth - 1);
-      state.hitCooldown = 0.6;
-      events |= EVENT_HIT;
+      if (state.hitCooldown <= 0) {
+        state.damage = Math.min(100, state.damage + DAMAGE.wallClip);
+        state.speed *= 0.94;
+        state.hitCooldown = 0.6;
+        events |= EVENT_HIT;
+      }
     }
 
     // Terrain: the floor is a crash unless this is the runway and we land right.

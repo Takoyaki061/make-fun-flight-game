@@ -17,6 +17,20 @@ import { buildDossier } from './vendor/makefun-game.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+// Fail fast on the gate's own caps, with a readable error, instead of
+// writing a dossier the scorer would refuse: at most 4 screenshots, each at
+// most 256 KiB, and a game/ of at most 993 entries and 48 MiB.
+import { readdirSync, statSync } from 'node:fs';
+const shotsDir = join(here, 'screenshots');
+if (existsSync(shotsDir)) {
+  const shots = readdirSync(shotsDir).filter((name) => !name.startsWith('.'));
+  if (shots.length > 4) throw new Error(`screenshots/: ${shots.length} images, at most 4 allowed`);
+  for (const name of shots) {
+    const size = statSync(join(shotsDir, name)).size;
+    if (size > 262144) throw new Error(`screenshots/${name}: ${size} bytes, at most 262144 allowed`);
+  }
+}
+
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
